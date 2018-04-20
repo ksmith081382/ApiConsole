@@ -27,13 +27,13 @@ namespace ApiConsole
         private static readonly string ContentType = "application/x-www-form-urlencoded";
 
         /// <summary>The API endpoint.</summary>
-        private static string Endpoint = "https://dev-api.msftdomains.com";
+        private static string Endpoint = "[replace with the API endpoint]";
 
         /// <summary>The API AUTH url.</summary>
-        private static string AuthUrl = "https://login.windows.net/microsoft.onmicrosoft.com";
+        private static string AuthUrl = "[replace with the address of the authority]";
 
         /// <summary>The Azure resource.</summary>
-        private static string Resource = "https://login.microsoftonline.com/dev-api.msftdomains.com";
+        private static string Resource = "[replace with the Azure resource]";
 
         /// <summary>
         /// The executing program.
@@ -142,10 +142,10 @@ namespace ApiConsole
             dnsRequestGroupModel.Manual = false;
 
             // Replace the string values below with the real values.
-            dnsRequestGroupModel.RequestorAlias = "v-kevsm";
-            dnsRequestGroupModel.PrimaryContactAlias = "v-kevsm";
+            dnsRequestGroupModel.RequestorAlias = "[alias]";
+            dnsRequestGroupModel.PrimaryContactAlias = "[alias]";
             dnsRequestGroupModel.BusinessJustification = "Creating a new DNS request for sample project.";
-            dnsRequestGroupModel.OwnerGroupAlias = "DMAdminTest";
+            dnsRequestGroupModel.OwnerGroupAlias = "[owner group alias]";
 
             // Add the DNS requests and set the model properties.
             // A record.
