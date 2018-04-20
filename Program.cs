@@ -44,10 +44,7 @@
         /// </summary>
         static async Task MainAsync()
         {
-            // Set request group model properties.
             DnsRequestGroupModel dnsRequestGroupModel = CreateDnsRequestGroupModel();
-
-            // Call the API Post method.
             List<string> errors = await CreateDnsRequestGroup(dnsRequestGroupModel);
         }
 
@@ -61,14 +58,7 @@
 
             try
             {
-                // The API uses bearer auth, so you need to have the AD application client Id and the app key.
-                // Please replace these values with your Client Id and App Key.
-                string clientId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
-                string appKey = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-
-                // Get the auth token from Azure.
-                string token = await GetApiAccessToken(clientId, appKey);
-
+                string token = await GetApiAccessToken();
                 HttpClient client = new HttpClient();
                 client.BaseAddress = new Uri(Endpoint);
                 client.DefaultRequestHeaders.Accept.Clear();
@@ -212,8 +202,12 @@
         /// Gets the API access token.
         /// </summary>
         /// <returns>The access token string.</returns>
-        private static async Task<string> GetApiAccessToken(string clientId, string appKey)
+        private static async Task<string> GetApiAccessToken()
         {
+            // The API uses bearer auth, so you need to have the AD application client Id and the app key.
+            // Please replace these values with your Client Id and App Key.
+            string clientId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
+            string appKey = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
             AuthenticationContext authenticationContext = new AuthenticationContext(AuthUrl, false);
             ClientCredential clientCredential = new ClientCredential(clientId, appKey);
             AuthenticationResult authenticationResult = await authenticationContext.AcquireTokenAsync(Resource, clientCredential);
