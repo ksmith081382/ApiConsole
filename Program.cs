@@ -139,7 +139,7 @@
             // Replace the string values below with the real values.
             dnsRequestGroupModel.RequestorAlias = "[alias]";
             dnsRequestGroupModel.PrimaryContactAlias = "[alias]";
-            dnsRequestGroupModel.BusinessJustification = "Creating a new DNS request for sample project.";
+            dnsRequestGroupModel.BusinessJustification = "[Business Justification]";
             dnsRequestGroupModel.OwnerGroupAlias = "[owner group alias]";
 
             // Add the DNS requests and set the model properties.
