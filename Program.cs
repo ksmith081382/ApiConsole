@@ -1,9 +1,4 @@
-﻿//-----------------------------------------------------------------------
-// <copyright file="Program.cs" company="Microsoft">
-//     Copyright (c) Microsoft Corporation.  All rights reserved.
-// </copyright>
-//----------------------------------------------------------------------- 
-namespace ApiConsole
+﻿namespace ApiConsole
 {
     using System;
     using System.Collections.Generic;
