@@ -114,14 +114,21 @@
             dnsRequestGroupModel.Environment = (byte)DnsEnvironment.InternetPublicFacing;
 
             // Set timed event if needed.
-            //dnsRequestGroupModel.IsTimedEvent = true;
+            dnsRequestGroupModel.IsTimedEvent = true;
 
             // If timed event, the date and time should be set in pacific standard time (PST).
-            //dnsRequestGroupModel.DateToExecute = DateTime.Now.AddDays(10);
-            //dnsRequestGroupModel.TimeToExecute = "12:00 PM"; // PST 'hh:MM AM|PM'
+            dnsRequestGroupModel.DateToExecute = DateTime.Now.AddDays(10);
 
-            // If Internet/Public-Facing, set zone.
-            dnsRequestGroupModel.Zone = "kevsm.tst";
+            // Time to execute format has to be 'hh:MM AM|PM'.
+            dnsRequestGroupModel.TimeToExecute = "12:00 PM";
+
+            // If environment is Internet/Public-Facing, set the zone.
+            dnsRequestGroupModel.Zone = "zone";
+
+            // If environment is Internet/Public-Facing, set the manual flag.
+            // The manual flag is set to true, if you want manual submission of DNS records (No automation of DNS changes).
+            // For Sovereign Cloud and Ad-Integrated records, manual is always true and this property is ignored.
+            dnsRequestGroupModel.Manual = false;
 
             // If environment is sovereign cloud, set child environment.
             //dnsRequestGroupModel.Environment = (byte)Environment.SovereignCloud;
@@ -131,30 +138,25 @@
             //dnsRequestGroupModel.Environment = (byte)Environment.ADIntegrated;
             //dnsRequestGroupModel.ChildEnvironment = (byte)AdIntegratedEnvironment.AME;
 
-            // The manual flag is set to true if you want manual submission of DNS records.
-            // Internet/Public-Facing records are currently only supported with automation. These types of records can be set to false.
-            // Sovereign Cloud and Ad-Integrated records are always manual, even if this is set to false. 
-            dnsRequestGroupModel.Manual = false;
-
             // Replace the string values below with the real values.
-            dnsRequestGroupModel.RequestorAlias = "[alias]";
-            dnsRequestGroupModel.PrimaryContactAlias = "[alias]";
-            dnsRequestGroupModel.BusinessJustification = "[Business Justification]";
-            dnsRequestGroupModel.OwnerGroupAlias = "[owner group alias]";
+            dnsRequestGroupModel.RequestorAlias = "Alias";
+            dnsRequestGroupModel.PrimaryContactAlias = "Alias";
+            dnsRequestGroupModel.BusinessJustification = "Business Justification";
+            dnsRequestGroupModel.OwnerGroupAlias = "Owner Group Alias";
 
             // Add the DNS requests and set the model properties.
             // A record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "recordName10111",
+                Name = "record1",
                 RecordType = "A",
-                Data = "3.3.3.5"
+                Data = "10.10.10.5"
             });
 
             // AAAA record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "recordName20111",
+                Name = "record2",
                 RecordType = "AAAA",
                 Data = "A123:B345:C567:D321:E456:43DD:Y7TR:SS39"
             });
@@ -162,25 +164,25 @@
             // NS record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "recordName30111",
+                Name = "record3",
                 RecordType = "NS",
-                Data = "wednesday.kevsm.tst."
+                Data = "test.nameserver.com."
             });
 
             // CNAME record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "recordName40111",
+                Name = "record4",
                 RecordType = "CNAME",
-                Data = "wednesday.kevsm.tst."
+                Data = "test.cname.com."
             });
 
             // SRV record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "recordName50111",
+                Name = "record5",
                 RecordType = "SRV",
-                Data = "wednesday.kevsm.tst.",
+                Data = "test.srv.com.",
                 Priority = 1,
                 Weight = 1,
                 Port = 300
@@ -189,16 +191,16 @@
             // MX record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "recordName60111",
+                Name = "record6",
                 RecordType = "MX",
-                Data = "wednesday.kevsm.tst.",
+                Data = "test.mx.com.",
                 Preference = 100
             });
 
             // TXT record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "recordName70111",
+                Name = "record7",
                 RecordType = "TXT",
                 Data = "This is the text record data"
             });
