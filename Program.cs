@@ -3,83 +3,118 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
     using System.Net.Http;
     using System.Net.Http.Headers;
-    using System.Web.Script.Serialization;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Newtonsoft.Json;
     using DnsRequestGroup.Constants;
     using DnsRequestGroup.Models;
+
 
     /// <summary>
     /// The console application to execute.
     /// </summary>
     class Program
     {
-        /// <summary>The header content type.</summary>
-        private static readonly string ContentType = "application/x-www-form-urlencoded";
-
-        /// <summary>The API endpoint.</summary>
-        private static string Endpoint = "[replace with the API endpoint]";
-
-        /// <summary>The API AUTH url.</summary>
-        private static string AuthUrl = "[replace with the address of the authority]";
-
-        /// <summary>The Azure resource.</summary>
-        private static string Resource = "[replace with the Azure resource]";
-
         /// <summary>
         /// The executing program.
         /// </summary>
         /// <param name="args">The array of string arguments.</param>
         static void Main(string[] args)
         {
-            MainAsync().Wait();
-        }
-
-        /// <summary>
-        /// The main asynchronous task to execute.
-        /// </summary>
-        static async Task MainAsync()
-        {
             DnsRequestGroupModel dnsRequestGroupModel = CreateDnsRequestGroupModel();
-            List<string> errors = await CreateDnsRequestGroup(dnsRequestGroupModel);
+            string requestGroupId = CreateDnsRequestGroup(dnsRequestGroupModel).Result;
+            string status = GetStatus(requestGroupId).Result;
         }
 
         /// <summary>
         /// Attempts to create the DNS request group.
         /// </summary>
         /// <param name="dnsRequestGroupModel">The DNS request group model.</param>
-        private static async Task<List<string>> CreateDnsRequestGroup(DnsRequestGroupModel dnsRequestGroupModel)
+        /// <returns>The Http response message object.</returns>
+        private static async Task<string> CreateDnsRequestGroup(DnsRequestGroupModel dnsRequestGroupModel)
         {
-            List<string> errors = new List<string>();
+            string id = string.Empty;
 
             try
             {
-                string token = await GetApiAccessToken();
-                HttpClient client = new HttpClient();
-                client.BaseAddress = new Uri(Endpoint);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(ContentType));
-                client.DefaultRequestHeaders.Add("Authorization", string.Format("Bearer {0}", token));
+                HttpClient client = await CreateHttpClient();
                 string json = "=" + JsonConvert.SerializeObject(dnsRequestGroupModel);
-                StringContent content = new StringContent(json, Encoding.UTF8, ContentType);
+                StringContent content = new StringContent(json, Encoding.UTF8, "application/x-www-form-urlencoded");
                 HttpResponseMessage response = client.PostAsync("DnsRequestGroups", content).Result;
 
-                if (!response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode)
                 {
-                    errors = ParseErrorMessages(response);
+                    id = response.Content.ReadAsStringAsync().Result;
+                }
+                else
+                {
+                    // The http response message will contain the error messages.
+                    string errorResult = response.Content.ReadAsStringAsync().Result;
+
+                    // Parse the string result into a list of error messages.
+                    List<string> errors = errorResult.Split('|').ToList();
                 }
             }
             catch (Exception ex)
             {
                 Trace.TraceError(ex.ToString());
-                errors.Add(ex.ToString());
             }
 
-            return errors;
+            return id;
+        }
+
+        /// <summary>
+        /// Gets the DNS request group status.
+        /// </summary>
+        /// <param name="id">The DNS request group id.</param>
+        private static async Task<string> GetStatus(string id)
+        {
+            string status = string.Empty;
+
+            try
+            {
+                HttpClient client = await CreateHttpClient();
+                HttpResponseMessage response = client.GetAsync("DnsRequestGroups/GetStatus/" + id).Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    status = response.Content.ReadAsStringAsync().Result;
+                }
+                else
+                {
+                    // The http response message will contain the error messages.
+                    string errorResult = response.Content.ReadAsStringAsync().Result;
+
+                    // Parse the string result into a list of error messages.
+                    List<string> errors = errorResult.Split('|').ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
+            }
+
+            return status;
+        }
+
+        /// <summary>
+        /// Creates the HttpClient object and sets the header with the Azure access token.
+        /// </summary>
+        /// <returns>The Http client object.</returns>
+        private static async Task<HttpClient> CreateHttpClient()
+        {
+            string token = await GetApiAccessToken();
+            HttpClient client = new HttpClient();
+            string ContentType = "application/x-www-form-urlencoded";
+            client.BaseAddress = new Uri("https://dev-api.msftdomains.com/");
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(ContentType));
+            client.DefaultRequestHeaders.Add("Authorization", string.Format("Bearer {0}", token));
+            return client;
         }
 
         /// <summary>
@@ -113,32 +148,32 @@
             dnsRequestGroupModel.TimeToExecute = "12:00 PM";
 
             // If environment is Internet/Public-Facing, set the zone.
-            dnsRequestGroupModel.Zone = "zone";
+            dnsRequestGroupModel.Zone = "kevsm.tst";
 
             // If environment is Internet/Public-Facing, set the manual flag.
             // The manual flag is set to true, if you want manual submission of DNS records (No automation of DNS changes).
             // For Sovereign Cloud and Ad-Integrated records, manual is always true and this property is ignored.
-            dnsRequestGroupModel.Manual = false;
+            dnsRequestGroupModel.Manual = true;
 
             // If environment is sovereign cloud, set child environment.
-            //dnsRequestGroupModel.Environment = (byte)Environment.SovereignCloud;
+            //dnsRequestGroupModel.Environment = (byte)DnsEnvironment.SovereignCloud;
             //dnsRequestGroupModel.ChildEnvironment = (byte)SovereignCloudEnvironment.DEME;
 
             // If environment is AD-Integrated, set child environment.
-            //dnsRequestGroupModel.Environment = (byte)Environment.ADIntegrated;
+            //dnsRequestGroupModel.Environment = (byte)DnsEnvironment.ADIntegrated;
             //dnsRequestGroupModel.ChildEnvironment = (byte)AdIntegratedEnvironment.AME;
 
             // Replace the string values below with the real values.
-            dnsRequestGroupModel.RequestorAlias = "Alias";
-            dnsRequestGroupModel.PrimaryContactAlias = "Alias";
+            dnsRequestGroupModel.RequestorAlias = "v-kevsm";
+            dnsRequestGroupModel.PrimaryContactAlias = "v-kevsm";
             dnsRequestGroupModel.BusinessJustification = "Business Justification";
-            dnsRequestGroupModel.OwnerGroupAlias = "Owner Group Alias";
+            dnsRequestGroupModel.OwnerGroupAlias = "DMAdminTest";
 
             // Add the DNS requests and set the model properties.
             // A record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "record1",
+                Name = "goodDay1",
                 RecordType = "A",
                 Data = "10.10.10.5"
             });
@@ -146,7 +181,7 @@
             // AAAA record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "record2",
+                Name = "goodDay2",
                 RecordType = "AAAA",
                 Data = "A123:B345:C567:D321:E456:43DD:Y7TR:SS39"
             });
@@ -154,7 +189,7 @@
             // NS record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "record3",
+                Name = "goodDay3",
                 RecordType = "NS",
                 Data = "test.nameserver.com."
             });
@@ -162,7 +197,7 @@
             // CNAME record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "record4",
+                Name = "goodDay4",
                 RecordType = "CNAME",
                 Data = "test.cname.com."
             });
@@ -170,7 +205,7 @@
             // SRV record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "record5",
+                Name = "goodDay5",
                 RecordType = "SRV",
                 Data = "test.srv.com.",
                 Priority = 1,
@@ -181,7 +216,7 @@
             // MX record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "record6",
+                Name = "goodDay6",
                 RecordType = "MX",
                 Data = "test.mx.com.",
                 Preference = 100
@@ -190,7 +225,7 @@
             // TXT record.
             dnsRequestGroupModel.DnsRequestModels.Add(new DnsRequestModel
             {
-                Name = "record7",
+                Name = "goodDay7",
                 RecordType = "TXT",
                 Data = "This is the text record data"
             });
@@ -204,52 +239,18 @@
         /// <returns>The access token string.</returns>
         private static async Task<string> GetApiAccessToken()
         {
-            // The API uses bearer auth, so you need to have the AD application client Id and the app key.
-            // Please replace these values with your Client Id and App Key.
+            // The API uses bearer auth, so you need to have the AAD application Id and the app key.
+            // Please replace these values with the real Client Id and App Key.
             string clientId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx";
             string appKey = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-            AuthenticationContext authenticationContext = new AuthenticationContext(AuthUrl, false);
+
+            string AuthUrl = "https://login.windows.net/microsoft.onmicrosoft.com";
+            string Resource = "https://login.microsoftonline.com/dev-api.msftdomains.com";
+
+            AuthenticationContext authenticationContext = new AuthenticationContext(AuthUrl);
             ClientCredential clientCredential = new ClientCredential(clientId, appKey);
             AuthenticationResult authenticationResult = await authenticationContext.AcquireTokenAsync(Resource, clientCredential);
             return authenticationResult.AccessToken;
-        }
-
-        /// <summary>
-        /// Parses the Http response message object. 
-        /// </summary>
-        /// <param name="response">The Http response message object.</param>
-        /// <returns>The list of error messages.</returns>
-        private static List<string> ParseErrorMessages(HttpResponseMessage response)
-        {
-            string resultString = response.Content.ReadAsStringAsync().Result;
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
-            serializer.MaxJsonLength = int.MaxValue;
-            Dictionary<string, object> deserializedJson = (Dictionary<string, object>)serializer.Deserialize(resultString, typeof(object));
-            Dictionary<string, object> errorDictionary = (Dictionary<string, object>)deserializedJson["error"];
-            List<string> errors = new List<string>();
-
-            foreach (KeyValuePair<string, object> keyValuePair in errorDictionary)
-            {
-                if (keyValuePair.Key == "message")
-                {
-                    dynamic objectValue = keyValuePair.Value;
-                    string value = objectValue == null ? string.Empty : objectValue.ToString();
-
-                    if (value.Contains("|"))
-                    {
-                        foreach (string error in value.Split('|'))
-                        {
-                            errors.Add(error.Trim());
-                        }
-                    }
-                    else
-                    {
-                        errors.Add(value);
-                    }
-                }
-            }
-
-            return errors;
         }
     }
 }
